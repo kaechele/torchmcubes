@@ -16,6 +16,19 @@ if(CMAKE_CUDA_COMPILER)
   set(CMAKE_CUDA_STANDARD 17)
   set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
+  if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 12)
+    message(STATUS "PyTorch NVTX headers workaround: Yes")
+    # only do this if nvToolsExt is not defined and CUDA::nvtx3 exists
+    if(NOT TARGET CUDA::nvToolsExt AND TARGET CUDA::nvtx3)
+      add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
+      # ensure that PyTorch is told to use NVTX3 headers
+      target_compile_definitions(CUDA::nvToolsExt INTERFACE TORCH_CUDA_USE_NVTX3)
+      target_link_libraries(CUDA::nvToolsExt INTERFACE CUDA::nvtx3)
+    endif()
+  else()
+    message(STATUS "PyTorch NVTX headers workaround: No")
+  endif()
+
   message(STATUS "INSTALLING EXTENSIONS WITH CUDA!")
   string(REGEX REPLACE ".[0-9][0-9]|\\." "" CUDA_V ${CMAKE_CUDA_COMPILER_VERSION})
   message(STATUS "CMAKE_CUDA_COMPILER = ${CMAKE_CUDA_COMPILER}")
