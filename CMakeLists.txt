@@ -21,7 +21,10 @@ if(CMAKE_CUDA_COMPILER)
     # only do this if nvToolsExt is not defined and CUDA::nvtx3 exists
     if(NOT TARGET CUDA::nvToolsExt AND TARGET CUDA::nvtx3)
       add_library(CUDA::nvToolsExt INTERFACE IMPORTED)
-      # ensure that PyTorch is told to use NVTX3 headers
+      # The TORCH_CUDA_USE_NVTX3 compile definition tells PyTorch to use the NVTX3 headers
+      # instead of the legacy NVTX headers. This is necessary when building with CUDA 12+
+      # and the CUDA::nvtx3 target is available, but CUDA::nvToolsExt is not defined.
+      # Without this definition, PyTorch may fail to find the correct NVTX headers.
       target_compile_definitions(CUDA::nvToolsExt INTERFACE TORCH_CUDA_USE_NVTX3)
       target_link_libraries(CUDA::nvToolsExt INTERFACE CUDA::nvtx3)
     endif()
